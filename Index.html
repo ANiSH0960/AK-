@@ -1,1 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WELCOME TO • AK 🙏</title>
+  <!-- Font Awesome 6 (free) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Firebase SDK (compat) – only database -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    /* [KEEP ALL EXISTING STYLES EXACTLY THE SAME] */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: #e9eef4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 12px;
+    }
+    #appFrame {
+      width: 100%;
+      max-width: 380px;
+      height: 760px;
+      background: white;
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow: 0 30px 60px -15px rgba(0,20,40,0.4);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+      background: #f8fafd;
+      padding: 24px 20px 10px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+    .screen.active {
+      display: flex;
+    }
+    .ak-title {
+      font-size: 4rem;
+      font-weight: 800;
+      letter-spacing: 6px;
+      color: #0a1a3a;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+    .small-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-shrink: 0; /* Prevent header from shrinking */
+    }
+    .ak-small {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #0a1a3a;
+    }
+    .mbb-badge {
+      background: #e1e9fa;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-weight: 600;
+      color: #0b2b5e;
+    }
+    .menu-icon {
+      font-size: 2rem;
+      color: #1e3a5f;
+      cursor: pointer;
+    }
+    .back-btn {
+      font-size: 2rem;
+      color: #1e3a8a;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .bottom-nav {
+      background: #ffffffdd;
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 6px 16px;
+      border-top: 1px solid #d9e2f0;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.02);
+      flex-shrink: 0; /* Prevent nav from shrinking */
+    }
+    .nav-item {
+      text-align: center;
+      color: #5f6c8c;
+      font-size: 0.7rem;
+      font-weight: 500;
+      flex: 1;
+      cursor: pointer;
+    }
+    .nav-item i {
+      font-size: 1.8rem;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .nav-item.active {
+      color: #1e4dd8;
+      font-weight: 600;
+    }
+    .input-field {
+      width: 100%;
+      padding: 16px 20px;
+      border: 1.5px solid #d5e0f0;
+      border-radius: 50px;
+      font-size: 1rem;
+      background: white;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    .input-field:focus {
+      border-color: #1e4dd8;
+      box-shadow: 0 0 0 3px #b2c9ff;
+    }
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 60px;
+      font-weight: 600;
+      font-size: 1.2rem;
+      border: none;
+      margin: 8px 0;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #1e3a8a;
+      color: white;
+      box-shadow: 0 6px 14px #1e3a8a55;
+    }
+    .btn-secondary {
+      background: white;
+      border: 2px solid #1e3a8a;
+      color: #1e3a8a;
+    }
+    .code-highlight {
+      background: #e7eeff;
+      padding: 20px;
+      border-radius: 40px;
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 2px;
+      margin: 25px 0;
+    }
+    /* FIXED: 9:16 aspect ratio photo */
+    .media-frame {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      background: #cbd5e1;
+      border-radius: 32px;
+      overflow: hidden;
+      margin: 16px 0 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      flex-shrink: 0; /* Prevent media from shrinking */
+    }
+    .media-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    /* FIXED: Larger notes box */
+    .notes-box {
+      background: white;
+      border-radius: 28px;
+      padding: 24px 22px; /* Larger padding */
+      margin: 16px 0 20px; /* More margin */
+      font-size: 1.1rem; /* Slightly larger font */
+      color: #1e293b;
+      border: 1px solid #e2eaf5;
+      min-height: 100px; /* Taller minimum height */
+      word-break: break-word;
+      line-height: 1.5; /* Better readability */
+      flex-shrink: 0; /* Prevent notes from shrinking */
+    }
+    .audio-row {
+      background: #eaf0fc;
+      border-radius: 40px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin: 10px 0 20px;
+      flex-shrink: 0; /* Prevent audio from shrinking */
+    }
+    audio {
+      width: 70%;
+      height: 42px;
+    }
+    /* FIXED: Reaction grid with proper spacing */
+    .reaction-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 20px 0 25px;
+      flex-shrink: 0; /* Prevent reactions from shrinking */
+    }
+    .reaction-btn {
+      background: white;
+      border: 1.5px solid #ccd9f0;
+      border-radius: 60px;
+      padding: 12px 0;
+      font-size: 1.8rem;
+      width: 18%;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.1s;
+    }
+    .reaction-btn.selected {
+      background: #fef0c0;
+      border-color: #f2a93b;
+      transform: scale(1.05);
+    }
+    .small-note {
+      color: #4d6278;
+      text-align: center;
+      margin-top: 12px;
+      flex-shrink: 0;
+    }
+    .password-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .password-wrapper input {
+      flex: 1;
+      padding-right: 50px;
+    }
+    .password-wrapper i {
+      position: absolute;
+      right: 20px;
+      font-size: 1.3rem;
+      color: #6b7a99;
+      cursor: pointer;
+    }
+    .error-message {
+      color: #b91c1c;
+      text-align: center;
+      margin: 8px 0;
+      font-weight: 500;
+    }
+    .leaderboard-entry {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 60px;
+      padding: 12px 20px;
+      margin-bottom: 12px;
+      border: 1px solid #d0ddeb;
+      transition: transform 0.1s;
+      flex-shrink: 0;
+    }
+    .rank-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 30px;
+      background: #2a3f6e;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.3rem;
+      margin-right: 15px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .king-rank {
+      background: linear-gradient(145deg, #d4af37, #f5e18b);
+      color: #3d2b1a;
+      text-shadow: 0 2px 4px #ffeeaa;
+      font-size: 1.8rem;
+      box-shadow: 0 6px 14px #e5c10080;
+    }
+    .entry-info {
+      flex: 1;
+    }
+    .entry-name {
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: -0.3px;
+    }
+    .entry-mbb {
+      font-size: 0.85rem;
+      color: #2d4059;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .entry-amount {
+      font-weight: 800;
+      font-size: 1.3rem;
+      color: #0f3b3b;
+      background: #e9f0f5;
+      padding: 6px 16px;
+      border-radius: 60px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .entry-amount i {
+      font-size: 1rem;
+      color: #a36b1f;
+    }
+    .golden-entry {
+      background: linear-gradient(135deg, #fff9e6, #fff3d1);
+      border: 2px solid #e8c547;
+      box-shadow: 0 8px 18px #f0cf7b50;
+    }
+    .golden-entry .entry-name {
+      color: #9e6d0b;
+    }
+    /* FIXED: Panel content scrolling */
+    .panel-content {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 4px; /* Space for scrollbar */
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Ensure content doesn't get cut off */
+    #homePanel, #leaderboardPanel {
+      display: flex;
+      flex-direction: column;
+      min-height: min-content;
+    }
+    
+    /* Add some bottom spacing for better scrolling */
+    #homePanel::after, #leaderboardPanel::after {
+      content: '';
+      display: block;
+      height: 20px;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+<div id="appFrame">
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="screen active">
+    <div class="ak-title">AK</div>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:20px;">
+      <button class="btn btn-primary" id="gotoLoginBtn">Login</button>
+      <button class="btn btn-secondary" id="gotoRegisterBtn">Registration</button>
+    </div>
+    <div class="small-note">MADE BY ANISH</div>
+  </div>
 
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen" class="screen">
+    <div class="small-header">
+      <button class="back-btn" id="loginBack"><i class="fas fa-arrow-left"></i></button>
+      <div class="ak-small">AK</div>
+      <div style="width:32px;"></div>
+    </div>
+    <h3 style="margin-bottom:25px;">Sign in</h3>
+    <input type="text" id="loginMbb" class="input-field" placeholder="MBB code" autocomplete="off">
+    <div class="password-wrapper">
+      <input type="password" id="loginPassword" class="input-field" placeholder="Password" value="Anish123456">
+      <i class="fas fa-eye-slash toggle-pwd" data-target="loginPassword"></i>
+    </div>
+    <div id="loginError" class="error-message"></div>
+    <button class="btn btn-primary" id="loginBtn">Login</button>
+  </div>
+
+  <!-- REGISTRATION SCREEN -->
+  <div id="registerScreen" class="screen">
+    <div class="small-header">
+      <button class="back-btn" id="registerBack"><i class="fas fa-arrow-left"></i></button>
+      <div class="ak-small">Register</div>
+      <div style="width:32px;"></div>
+    </div>
+    <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:4px;">
+      <input type="text" id="regName" class="input-field" placeholder="Full name" required>
+      <input type="text" id="regFather" class="input-field" placeholder="Father name" required>
+      <input type="text" id="regVillage" class="input-field" placeholder="Village" required>
+      <input type="text" id="regPO" class="input-field" placeholder="Post office" required>
+      <input type="text" id="regPS" class="input-field" placeholder="Police station" required>
+      <input type="text" id="regDistrict" class="input-field" placeholder="District" required>
+      <input type="text" id="regState" class="input-field" placeholder="State" required>
+      <input type="text" id="regPin" class="input-field" placeholder="PIN code (6 digits)" maxlength="6">
+      <input type="date" id="regDob" class="input-field" required>
+      <input type="text" id="regPhone" class="input-field" placeholder="Phone number (10 digits)" maxlength="10">
+      <div id="regError" class="error-message"></div>
+      <button class="btn btn-primary" id="registerSubmit">Register</button>
+    </div>
+  </div>
+
+  <!-- REG SUCCESS SCREEN -->
+  <div id="regSuccess" class="screen">
+    <div class="small-header">
+      <button class="back-btn" id="successBack"><i class="fas fa-arrow-left"></i></button>
+      <div class="ak-small">AK</div>
+      <div style="width:32px;"></div>
+    </div>
+    <div style="text-align:center; margin-top:50px;">
+      <i class="fas fa-check-circle" style="font-size:5rem; color:#1e3a8a;"></i>
+      <h3 style="margin:30px 0 20px;">Your MBB code:</h3>
+      <div class="code-highlight" id="generatedMbb">MBB-0001</div>
+      <button class="btn btn-secondary" id="goToLoginAfterReg">Back to Login</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD with BOTTOM NAV -->
+  <div id="dashboard" class="screen">
+    <div class="small-header">
+      <div class="ak-small">AK</div>
+      <div class="mbb-badge" id="dashMbb">MBB-</div>
+      <div class="menu-icon" id="dashMenu"><i class="fas fa-ellipsis-vertical"></i></div>
+    </div>
+    <div style="color:#475569; margin-bottom:5px; flex-shrink:0;">MADE BY ANISH</div>
+
+    <div id="panelContent" class="panel-content">
+      <!-- HOME PANEL -->
+      <div id="homePanel">
+        <!-- FIXED: 9:16 aspect ratio photo -->
+        <div class="media-frame">
+          <img id="dashImage" src="https://placehold.co/900x1600/1e3a8a/white?text=AK" alt="content">
+        </div>
+        <!-- FIXED: Larger notes box -->
+        <div class="notes-box" id="dashNotes">Admin notes appear here</div>
+        <!-- Audio player -->
+        <div class="audio-row">
+          <i class="fas fa-microphone-alt" style="font-size:2rem; color:#1e3a8a;"></i>
+          <audio id="dashAudio" controls style="display:none;"></audio>
+          <span id="audioPlaceholder">No voice message</span>
+        </div>
+        <!-- Reaction grid (10 emojis) -->
+        <div class="reaction-grid" id="reactionGrid">
+          <button class="reaction-btn" data-reaction="cry">😢</button>
+          <button class="reaction-btn" data-reaction="laugh">😂</button>
+          <button class="reaction-btn" data-reaction="fire">🔥</button>
+          <button class="reaction-btn" data-reaction="heart">❤️</button>
+          <button class="reaction-btn" data-reaction="like">👍</button>
+          <button class="reaction-btn" data-reaction="clap">👏</button>
+          <button class="reaction-btn" data-reaction="angry">😡</button>
+          <button class="reaction-btn" data-reaction="surprise">😮</button>
+          <button class="reaction-btn" data-reaction="began">🍆</button>
+          <button class="reaction-btn" data-reaction="bicep">💪</button>
+        </div>
+      </div>
+      
+      <!-- LEADERBOARD PANEL -->
+      <div id="leaderboardPanel" style="display: none;">
+        <h3 style="margin: 8px 0 16px; flex-shrink:0;">🏅 Paid leaderboard</h3>
+        <div id="leaderboardContainer"></div>
+        <p id="lbEmptyMsg" style="color: #6a7a9e; text-align: center; flex-shrink:0;">No paid entries yet</p>
+      </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION -->
+    <div class="bottom-nav" id="userBottomNav">
+      <div class="nav-item active" data-userpanel="home"><i class="fas fa-home"></i><span>Home</span></div>
+      <div class="nav-item" data-userpanel="leaderboard"><i class="fas fa-crown"></i><span>Leaderboard</span></div>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD SCREEN -->
+  <div id="changePwd" class="screen">
+    <div class="small-header">
+      <button class="back-btn" id="cpBack"><i class="fas fa-arrow-left"></i></button>
+      <div class="ak-small">Change</div>
+      <div style="width:32px;"></div>
+    </div>
+    <div style="flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; margin-top:20px;">
+      <div class="password-wrapper">
+        <input type="password" id="cpCurrent" class="input-field" placeholder="Current password">
+        <i class="fas fa-eye-slash toggle-pwd" data-target="cpCurrent"></i>
+      </div>
+      <div class="password-wrapper">
+        <input type="password" id="cpNew" class="input-field" placeholder="New password">
+        <i class="fas fa-eye-slash toggle-pwd" data-target="cpNew"></i>
+      </div>
+      <div class="password-wrapper">
+        <input type="password" id="cpConfirm" class="input-field" placeholder="Confirm new">
+        <i class="fas fa-eye-slash toggle-pwd" data-target="cpConfirm"></i>
+      </div>
+      <div id="cpError" class="error-message"></div>
+      <button class="btn btn-primary" id="cpUpdate">Update password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // FIREBASE INIT
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtZoYgd-PhQzX4lNpsLFoR4EeuuoZ1LE8",
+    authDomain: "anishak-62313.firebaseapp.com",
+    databaseURL: "https://anishak-62313-default-rtdb.firebaseio.com",
+    projectId: "anishak-62313",
+    storageBucket: "anishak-62313.firebasestorage.app",
+    messagingSenderId: "510202861922",
+    appId: "1:510202861922:web:bc5759d725d8a4ea18343b"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // ---------- state ----------
+  let currentMbb = null;
+  const DEFAULT_PASS = "Anish123456";
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    // Scroll to top when switching screens
+    document.getElementById(id).scrollTop = 0;
+  }
+
+  // Password toggle
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fa-eye-slash') || e.target.classList.contains('fa-eye')) {
+      const icon = e.target;
+      const wrapper = icon.closest('.password-wrapper');
+      if (!wrapper) return;
+      const input = wrapper.querySelector('input');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    }
+  });
+
+  // Navigation
+  document.getElementById('gotoLoginBtn').addEventListener('click', () => showScreen('loginScreen'));
+  document.getElementById('gotoRegisterBtn').addEventListener('click', () => showScreen('registerScreen'));
+  document.getElementById('loginBack').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('registerBack').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('successBack').addEventListener('click', () => showScreen('mainMenu'));
+  document.getElementById('goToLoginAfterReg').addEventListener('click', () => {
+    const mbb = document.getElementById('generatedMbb').innerText;
+    document.getElementById('loginMbb').value = mbb;
+    document.getElementById('loginPassword').value = DEFAULT_PASS;
+    showScreen('loginScreen');
+  });
+  document.getElementById('dashMenu').addEventListener('click', () => {
+    if (!currentMbb) return showScreen('mainMenu');
+    showScreen('changePwd');
+  });
+  document.getElementById('cpBack').addEventListener('click', () => {
+    if (!currentMbb) showScreen('mainMenu');
+    else showScreen('dashboard');
+  });
+
+  // Registration
+  document.getElementById('registerSubmit').addEventListener('click', async () => {
+    const name = document.getElementById('regName').value.trim();
+    const father = document.getElementById('regFather').value.trim();
+    const village = document.getElementById('regVillage').value.trim();
+    const po = document.getElementById('regPO').value.trim();
+    const ps = document.getElementById('regPS').value.trim();
+    const district = document.getElementById('regDistrict').value.trim();
+    const state = document.getElementById('regState').value.trim();
+    const pin = document.getElementById('regPin').value.trim();
+    const dob = document.getElementById('regDob').value;
+    const phone = document.getElementById('regPhone').value.trim();
+    const errorDiv = document.getElementById('regError');
+    errorDiv.innerText = '';
+
+    if (!name || !father || !village || !po || !ps || !district || !state || !pin || !dob || !phone) {
+      errorDiv.innerText = 'All fields are required'; return;
+    }
+    if (!/^\d{6}$/.test(pin)) { errorDiv.innerText = 'PIN must be exactly 6 digits'; return; }
+    if (!/^\d{10}$/.test(phone)) { errorDiv.innerText = 'Phone must be exactly 10 digits'; return; }
+
+    let newMbb;
+    try {
+      const result = await db.ref('metadata/lastMbb').transaction(current => (current || 0) + 1);
+      const seq = result.snapshot.val();
+      newMbb = 'MBB-' + String(seq).padStart(4, '0');
+    } catch (e) { errorDiv.innerText = 'Registration error, try again'; return; }
+
+    const userData = { name, father, village, postOffice: po, policeStation: ps, district, state, pin, dob, phone, password: DEFAULT_PASS };
+    try {
+      await db.ref('users/' + newMbb).set(userData);
+      document.getElementById('generatedMbb').innerText = newMbb;
+      showScreen('regSuccess');
+    } catch { errorDiv.innerText = 'Failed to save user'; }
+  });
+
+  // Login
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    const mbb = document.getElementById('loginMbb').value.trim();
+    const pwd = document.getElementById('loginPassword').value.trim();
+    const errorDiv = document.getElementById('loginError');
+    errorDiv.innerText = '';
+    if (!mbb || !pwd) { errorDiv.innerText = 'Enter MBB and password'; return; }
+    const snap = await db.ref('users/' + mbb).once('value');
+    const user = snap.val();
+    if (user && user.password && user.password.trim() === pwd) {
+      currentMbb = mbb;
+      document.getElementById('dashMbb').innerText = mbb;
+      document.querySelectorAll('#userBottomNav .nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector('#userBottomNav [data-userpanel="home"]').classList.add('active');
+      document.getElementById('homePanel').style.display = 'block';
+      document.getElementById('leaderboardPanel').style.display = 'none';
+      showScreen('dashboard');
+      listenAdminContent();
+      listenUserReaction();
+      listenLeaderboard();
+    } else { errorDiv.innerText = 'Invalid MBB or password'; }
+  });
+
+  // Admin content listener
+  function listenAdminContent() {
+    const contentRef = db.ref('adminContent/live');
+    contentRef.off();
+    contentRef.on('value', (snap) => {
+      const data = snap.val() || {};
+      document.getElementById('dashImage').src = data.image || 'https://placehold.co/900x1600/1e3a8a/white?text=AK';
+      document.getElementById('dashNotes').innerText = data.notes || 'No admin notes';
+      const audioEl = document.getElementById('dashAudio');
+      const placeholder = document.getElementById('audioPlaceholder');
+      if (data.audioUrl) { 
+        audioEl.src = data.audioUrl; 
+        audioEl.style.display = 'inline-block'; 
+        placeholder.style.display = 'none'; 
+      } else { 
+        audioEl.style.display = 'none'; 
+        placeholder.style.display = 'inline'; 
+      }
+      if (currentMbb) {
+        db.ref('reactions/' + currentMbb).remove()
+          .then(() => document.querySelectorAll('.reaction-btn').forEach(btn => btn.classList.remove('selected')))
+          .catch(() => {});
+      }
+    });
+  }
+
+  // User reaction listener
+  function listenUserReaction() {
+    if (!currentMbb) return;
+    const userReactRef = db.ref('reactions/' + currentMbb);
+    userReactRef.off();
+    userReactRef.on('value', (snap) => {
+      const val = snap.val();
+      document.querySelectorAll('.reaction-btn').forEach(btn => {
+        if (val && btn.dataset.reaction === val.reaction) btn.classList.add('selected');
+        else btn.classList.remove('selected');
+      });
+    });
+  }
+
+  // Reaction click handler
+  document.querySelectorAll('.reaction-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      if (!currentMbb) return;
+      const reaction = e.currentTarget.dataset.reaction;
+      await db.ref('reactions/' + currentMbb).set({ reaction, timestamp: Date.now() });
+    });
+  });
+
+  // Bottom nav (Home/Leaderboard)
+  document.querySelectorAll('#userBottomNav .nav-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const target = item.dataset.userpanel;
+      document.querySelectorAll('#userBottomNav .nav-item').forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+      if (target === 'home') {
+        document.getElementById('homePanel').style.display = 'block';
+        document.getElementById('leaderboardPanel').style.display = 'none';
+      } else {
+        document.getElementById('homePanel').style.display = 'none';
+        document.getElementById('leaderboardPanel').style.display = 'block';
+        refreshLeaderboard();
+      }
+      // Scroll to top when switching panels
+      document.getElementById('panelContent').scrollTop = 0;
+    });
+  });
+
+  // Leaderboard functions
+  const leaderboardContainer = document.getElementById('leaderboardContainer');
+  const lbEmptyMsg = document.getElementById('lbEmptyMsg');
+
+  function listenLeaderboard() {
+    db.ref('payments').on('value', async (snap) => {
+      await renderLeaderboard(snap);
+    });
+  }
+
+  async function renderLeaderboard(snap) {
+    const payments = snap.val();
+    if (!payments) {
+      leaderboardContainer.innerHTML = '';
+      lbEmptyMsg.style.display = 'block';
+      return;
+    }
+    lbEmptyMsg.style.display = 'none';
+    
+    const userPayments = {};
+    Object.entries(payments).forEach(([mbb, paymentData]) => {
+      Object.values(paymentData).forEach(p => {
+        if (p && p.amount) {
+          if (!userPayments[mbb]) userPayments[mbb] = 0;
+          userPayments[mbb] += Number(p.amount);
+        }
+      });
+    });
+    
+    const entriesArray = Object.entries(userPayments).map(([mbb, amount]) => ({ mbb, amount }));
+    entriesArray.sort((a, b) => b.amount - a.amount);
+
+    let html = '';
+    for (let i = 0; i < entriesArray.length; i++) {
+      const { mbb, amount } = entriesArray[i];
+      const userSnap = await db.ref('users/' + mbb).once('value');
+      const user = userSnap.val() || { name: 'Unknown User' };
+      const displayName = user.name || 'Unknown';
+      const rank = i + 1;
+      const isKing = rank === 1;
+      const rankClass = isKing ? 'king-rank' : '';
+      const entryClass = isKing ? 'leaderboard-entry golden-entry' : 'leaderboard-entry';
+      const rankDisplay = isKing ? '👑' : rank;
+      
+      html += `
+        <div class="${entryClass}">
+          <div class="rank-badge ${rankClass}">${rankDisplay}</div>
+          <div class="entry-info">
+            <div class="entry-name">${displayName}</div>
+            <div class="entry-mbb"><i class="fas fa-tag"></i> ${mbb}</div>
+          </div>
+          <div class="entry-amount"><i class="fas fa-rupee-sign"></i> ${amount}</div>
+        </div>
+      `;
+    }
+    leaderboardContainer.innerHTML = html;
+  }
+
+  async function refreshLeaderboard() {
+    const snap = await db.ref('payments').once('value');
+    await renderLeaderboard(snap);
+  }
+
+  // Change password
+  document.getElementById('cpUpdate').addEventListener('click', async () => {
+    if (!currentMbb) return showScreen('mainMenu');
+    const cur = document.getElementById('cpCurrent').value.trim();
+    const newp = document.getElementById('cpNew').value.trim();
+    const con = document.getElementById('cpConfirm').value.trim();
+    const errorDiv = document.getElementById('cpError');
+    errorDiv.innerText = '';
+
+    if (!cur || !newp || !con) { errorDiv.innerText = 'All fields required'; return; }
+    if (newp !== con) { errorDiv.innerText = 'New passwords do not match'; return; }
+
+    const userSnap = await db.ref('users/' + currentMbb).once('value');
+    const user = userSnap.val();
+    if (user && user.password && user.password.trim() === cur) {
+      await db.ref('users/' + currentMbb + '/password').set(newp);
+      alert('Password updated');
+      document.getElementById('cpCurrent').value = '';
+      document.getElementById('cpNew').value = '';
+      document.getElementById('cpConfirm').value = '';
+      showScreen('dashboard');
+    } else { errorDiv.innerText = 'Current password incorrect'; }
+  });
+</script>
+</body>
+</html>
